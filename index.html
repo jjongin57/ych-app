@@ -39,23 +39,17 @@
     </header>
 
     <nav class="menu" aria-label="놀이 메뉴">
-      <a class="card" href="#draw"   style="--c:#FF8A80; --d:0s">
-        <span class="icon">🎨</span><span class="label">그림 그리기</span>
-      </a>
-      <a class="card" href="#hangul" style="--c:#FFD54F; --d:.05s">
-        <span class="icon">🔤</span><span class="label">한글 놀이</span>
-      </a>
-      <a class="card" href="#number" style="--c:#81D4FA; --d:.1s">
-        <span class="icon">🔢</span><span class="label">숫자 놀이</span>
-      </a>
-      <a class="card" href="#sea" style="--c:#80DEEA; --d:.15s">
+      <a class="card" href="#sea"    style="--c:#80DEEA; --d:0s">
         <span class="icon">🐳</span><span class="label">바다 체험</span>
       </a>
-      <a class="card" href="#story"  style="--c:#CE93D8; --d:.2s">
-        <span class="icon">📚</span><span class="label">동화 듣기</span>
+      <a class="card" href="#draw"   style="--c:#FF8A80; --d:.05s">
+        <span class="icon">🎨</span><span class="label">그림 그리기</span>
       </a>
-      <a class="card" href="#music"  style="--c:#FFAB91; --d:.25s">
-        <span class="icon">🎵</span><span class="label">노래 부르기</span>
+      <a class="card" href="#bubble" style="--c:#B39DDB; --d:.1s">
+        <span class="icon">🫧</span><span class="label">비눗방울</span>
+      </a>
+      <a class="card" href="#peek"   style="--c:#A5D6A7; --d:.15s">
+        <span class="icon">🙈</span><span class="label">까꿍 놀이</span>
       </a>
     </nav>
 
@@ -65,28 +59,49 @@
     </section>
   </main>
 
-  <!-- 하위 화면(준비 중) -->
-  <section id="sub" class="screen" hidden>
-    <button type="button" class="back" id="backBtn">⬅️ 집으로</button>
-    <div class="sub-body">
-      <div class="sub-icon" id="subIcon">🎨</div>
-      <h2 class="sub-title" id="subTitle">그림 그리기</h2>
-      <p class="sub-text">곧 만나요! 준비하고 있어요 🛠️</p>
-    </div>
-  </section>
-
   <!-- 바다 체험 -->
-  <section id="seaScreen" class="sea-screen" hidden>
+  <section id="seaScreen" class="game-screen sea-screen" hidden>
     <canvas id="seaCanvas" aria-label="바다 체험: 바다 친구를 눌러 보세요"></canvas>
-    <div class="sea-top">
-      <button type="button" class="back" id="seaBackBtn">⬅️ 집으로</button>
-      <span class="sea-title">🐳 바다 체험</span>
+    <div class="game-top">
+      <button type="button" class="back hold-back">⬅️ 집으로</button>
+      <span class="game-title">🐳 바다 체험</span>
       <button type="button" class="back fs-btn" id="fsBtn" hidden>📺 크게 보기</button>
     </div>
     <p class="sea-hint" id="seaHint">바다 친구를 톡톡 눌러 보세요!</p>
   </section>
 
+  <!-- 그림 그리기 -->
+  <section id="drawScreen" class="game-screen draw-screen" hidden>
+    <canvas class="draw-canvas" aria-label="그림 그리기 종이"></canvas>
+    <div class="tools" aria-label="색깔과 도구"></div>
+    <div class="game-top">
+      <button type="button" class="back hold-back">⬅️ 집으로</button>
+    </div>
+  </section>
+
+  <!-- 비눗방울 -->
+  <section id="bubbleScreen" class="game-screen" hidden>
+    <canvas aria-label="비눗방울: 눌러서 터뜨려 보세요"></canvas>
+    <div class="game-top">
+      <button type="button" class="back hold-back">⬅️ 집으로</button>
+      <span class="game-title">🫧 비눗방울</span>
+    </div>
+  </section>
+
+  <!-- 까꿍 놀이 -->
+  <section id="peekScreen" class="game-screen peek-screen" hidden>
+    <div class="peek-grid"></div>
+    <div class="game-top">
+      <button type="button" class="back hold-back">⬅️ 집으로</button>
+      <span class="game-title">🙈 까꿍 놀이</span>
+    </div>
+  </section>
+
+  <script src="common.js"></script>
   <script src="sea.js"></script>
+  <script src="draw.js"></script>
+  <script src="bubble.js"></script>
+  <script src="peek.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

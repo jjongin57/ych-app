@@ -78,7 +78,7 @@ body {
   gap: 16px;
 }
 @media (min-width: 640px) {
-  .menu { grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .menu { grid-template-columns: repeat(4, 1fr); gap: 22px; }
 }
 
 .card {
@@ -142,47 +142,48 @@ body {
 }
 .back:active { transform: translateY(4px); box-shadow: none; }
 
-.sub-body { text-align: center; margin-top: 12vh; }
-.sub-icon { font-size: 120px; animation: bounce 1.4s ease-in-out infinite; }
-.sub-title { font-size: 40px; font-weight: normal; margin: 12px 0 8px; }
-.sub-text { font-size: 22px; color: var(--ink-soft); }
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-18px); }
-}
-
-/* ---------- 바다 체험 ---------- */
-.sea-screen {
+/* ---------- 놀이 화면 공통 ---------- */
+.game-screen {
   position: fixed;
   inset: 0;
   z-index: 5;
-  background: #1f74b5;
   overflow: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-.sea-screen canvas {
+.game-screen[hidden] { display: none !important; }
+.game-screen > canvas {
   display: block;
   width: 100%;
   height: 100%;
   touch-action: none;
   cursor: pointer;
 }
-.sea-top {
+.game-top {
   position: absolute;
+  z-index: 3;
   top: max(12px, env(safe-area-inset-top));
-  left: 16px;
-  right: 16px;
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
   display: flex;
   align-items: center;
   gap: 12px;
   pointer-events: none;
 }
-.sea-top > * { pointer-events: auto; }
+.game-top > * { pointer-events: auto; }
+.game-title {
+  font-size: 24px;
+  color: #fff;
+  pointer-events: none !important;
+  text-shadow: 0 2px 0 #1b2440, 2px 0 0 #1b2440, -2px 0 0 #1b2440, 0 -2px 0 #1b2440;
+}
 .fs-btn { margin-left: auto; font-size: 18px; padding: 10px 18px; }
-.sea-screen { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.fs-btn[hidden] { display: none; }
 
 /* '집으로' 꾹 누르기: 누르는 동안 버튼이 차오름 */
-#seaBackBtn { position: relative; overflow: hidden; touch-action: none; }
-#seaBackBtn::after {
+.hold-back { position: relative; overflow: hidden; touch-action: none; }
+.hold-back::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -191,13 +192,10 @@ body {
   transform-origin: left;
   pointer-events: none;
 }
-#seaBackBtn.holding::after { transform: scaleX(1); transition: transform 1s linear; }
-.fs-btn[hidden] { display: none; }
-.sea-title {
-  font-size: 24px;
-  color: #fff;
-  text-shadow: 0 2px 0 #1b2440, 2px 0 0 #1b2440, -2px 0 0 #1b2440, 0 -2px 0 #1b2440;
-}
+.hold-back.holding::after { transform: scaleX(1); transition: transform 1s linear; }
+
+/* ---------- 바다 체험 ---------- */
+.sea-screen { background: #1f74b5; }
 .sea-hint {
   position: absolute;
   left: 50%;
@@ -215,6 +213,146 @@ body {
 }
 .sea-hint.hide { opacity: 0; }
 
+/* ---------- 그림 그리기 ---------- */
+.draw-screen { display: flex; flex-direction: column; background: #fff; }
+.draw-screen > .draw-canvas { flex: 1 1 0; min-height: 0; min-width: 0; height: auto; }
+.draw-canvas.swoosh { animation: swoosh .4s ease; }
+@keyframes swoosh {
+  50% { opacity: .15; transform: translateX(40px) rotate(1.5deg); }
+}
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: #fff3e0;
+  border-top: 3px solid #ffe0b2;
+}
+.tool {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .15);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: none;
+  transition: transform .12s;
+}
+.tool.swatch { background: var(--sw); }
+.tool.active { transform: scale(1.18); border-color: #4a3b2c; }
+/* 가로 화면: 도구를 오른쪽에 두 줄로 */
+@media (orientation: landscape) {
+  .draw-screen { flex-direction: row; }
+  .draw-screen > .draw-canvas { height: 100%; width: auto; }
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(2, 52px);
+    grid-auto-rows: 52px;
+    align-content: center;
+    gap: 10px;
+    padding: 10px max(14px, env(safe-area-inset-right)) 10px 14px;
+    border-top: none;
+    border-left: 3px solid #ffe0b2;
+  }
+}
+
+/* ---------- 비눗방울 ---------- */
+#bubbleScreen { background: #e9f4ff; }
+
+/* ---------- 까꿍 놀이 ---------- */
+.peek-screen { background: linear-gradient(#bfe9ff 0%, #e6f7ff 52%, #b7e4a0 52%, #8fd27a 100%); }
+.peek-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 14px;
+  padding: calc(max(12px, env(safe-area-inset-top)) + 64px) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+@media (orientation: landscape) {
+  .peek-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
+}
+.spot {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, .35);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.peek-animal {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 34%;
+  font-size: min(20vw, 22vh);
+  line-height: 1;
+  transform: translate(-50%, 160%);
+  transition: transform .4s cubic-bezier(.34, 1.56, .64, 1);
+}
+.spot.open .peek-animal { transform: translate(-50%, -10%); }
+.spot.rustle .peek-animal { animation: peekEars 1s ease; }
+.spot.wiggle .peek-animal { animation: wiggle .5s ease; }
+@keyframes peekEars { /* 귀만 살짝 */
+  0%, 100% { transform: translate(-50%, 160%); }
+  30%, 70% { transform: translate(-50%, 62%); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: translate(-50%, -10%) rotate(0); }
+  25% { transform: translate(-50%, -18%) rotate(-12deg); }
+  75% { transform: translate(-50%, -18%) rotate(12deg); }
+}
+.bush {
+  position: absolute;
+  z-index: 2;
+  left: 10%;
+  right: 10%;
+  bottom: -6%;
+  height: 32%;
+  background: #43a047;
+  border-radius: 40% 40% 12% 12% / 60% 60% 12% 12%;
+  transform-origin: 50% 100%;
+}
+.bush::before, .bush::after { content: ""; position: absolute; border-radius: 50%; aspect-ratio: 1; }
+.bush::before { height: 110%; left: 12%; top: -52%; background: #4caf50; }
+.bush::after { height: 125%; right: 12%; top: -68%; background: #5cbf60; }
+@media (orientation: portrait) {
+  .bush { height: 22%; }
+  .peek-animal { bottom: 22%; }
+}
+.spot.rustle .bush { animation: rustle .5s ease 2; }
+@keyframes rustle {
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+.peek-bubble {
+  position: absolute;
+  z-index: 3;
+  top: 6%;
+  right: 6%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #E85D75;
+  font-size: clamp(18px, 4vh, 26px);
+  white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .1);
+  transform: scale(0);
+  transform-origin: 0% 100%;
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+.spot.open .peek-bubble { transform: scale(1); }
+
 /* ---------- 가로 모드 휴대폰 (화면 높이가 낮을 때) ---------- */
 @media (max-height: 500px) and (orientation: landscape) {
   .screen { padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: 16px;
@@ -223,7 +361,7 @@ body {
   .sun { font-size: 40px; }
   .greeting { display: none; }
   .title { font-size: 24px; margin: 0; }
-  .menu { grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .menu { grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 640px; margin: 0 auto; }
   .card { min-height: 0; border-radius: 22px; }
   .icon { font-size: 44px; }
   .label { font-size: 16px; }
@@ -231,10 +369,13 @@ body {
   .stickers-title { font-size: 16px; }
   .stars { font-size: 20px; }
 
-  .sea-top { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); top: 8px; }
-  .sea-top .back { font-size: 16px; padding: 8px 14px; }
-  .sea-title { font-size: 18px; }
+  .game-top { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); top: 8px; }
+  .game-top .back { font-size: 16px; padding: 8px 14px; }
+  .game-title { font-size: 18px; }
   .sea-hint { font-size: 16px; padding: 8px 16px; bottom: 10px; }
+  .tools { grid-template-columns: repeat(2, 44px); grid-auto-rows: 44px; gap: 8px; }
+  .tool { width: 44px; height: 44px; font-size: 22px; border-width: 3px; }
+  .peek-grid { padding-top: calc(max(8px, env(safe-area-inset-top)) + 48px); gap: 10px; }
 }
 
 /* 움직임 줄이기 설정 존중 */

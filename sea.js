@@ -631,10 +631,12 @@
   //  경고(어두워짐·쿵쿵) → 등장(포효·흔들림) → 퇴장 → 작은 친구들 복귀
   // =====================================================
   const ease = (t) => t * t * (3 - 2 * t);
+  const GIANT_ORDER = ["kraken", "mosa", "mega"]; // 이 순서대로 돌아가며 등장
+  let giantIdx = 0; // 바다 체험을 나갔다 들어와도 순서가 이어짐
 
   function startGiant(kind) {
     if (giant) return;
-    kind = kind || ["kraken", "mosa", "mega"][Math.floor(Math.random() * 3)];
+    if (!kind) kind = GIANT_ORDER[giantIdx++ % GIANT_ORDER.length];
     // 작은 친구들은 화면 밖으로 숨기
     for (const c of creatures) {
       if (c.state !== "swim") continue;

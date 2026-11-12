@@ -8,16 +8,16 @@ const store = {
   },
 };
 
-// ---------- 메뉴 정보 ----------
-const MENUS = {
-  draw:   { icon: "🎨", title: "그림 그리기" },
-  hangul: { icon: "🔤", title: "한글 놀이" },
-  number: { icon: "🔢", title: "숫자 놀이" },
-  story:  { icon: "📚", title: "동화 듣기" },
-  music:  { icon: "🎵", title: "노래 부르기" },
-};
-
 const $ = (id) => document.getElementById(id);
+
+// ---------- 놀이 목록 (주소 #이름 → 화면 + 시작/정지) ----------
+// 새 놀이를 만들면 여기에 한 줄 추가하고, index.html에 카드와 화면을 넣으면 됨
+const GAMES = {
+  sea:    { screen: "seaScreen",    start: () => SeaGame.start($("seaCanvas"), $("seaHint")), stop: () => SeaGame.stop() },
+  draw:   { screen: "drawScreen",   start: () => DrawGame.start($("drawScreen")),     stop: () => DrawGame.stop() },
+  bubble: { screen: "bubbleScreen", start: () => BubbleGame.start($("bubbleScreen")), stop: () => BubbleGame.stop() },
+  peek:   { screen: "peekScreen",   start: () => PeekGame.start($("peekScreen")),     stop: () => PeekGame.stop() },
+};
 
 // ---------- 시간대별 인사 ----------
 function greetingText() {
@@ -108,33 +108,23 @@ document.querySelectorAll(".card").forEach((card) => {
   card.addEventListener("click", () => {
     blip();
     addStar();
-    // 휴대폰/태블릿에서 바다 체험에 들어가면 자동으로 전체화면
-    if (card.getAttribute("href") === "#sea" && isTouch) enterFullscreen();
+    // 휴대폰/태블릿에서 놀이에 들어가면 자동으로 전체화면
+    if (isTouch) enterFullscreen();
   });
 });
 
 // ---------- 화면 전환 (해시 라우팅) ----------
+let currentGame = null;
 function route() {
-  const key = location.hash.slice(1);
-  const isSea = key === "sea";
-  const menu = MENUS[key];
-  $("home").hidden = !!menu || isSea;
-  $("sub").hidden = !menu;
-  $("seaScreen").hidden = !isSea;
-  if (isSea) window.SeaGame.start($("seaCanvas"), $("seaHint"));
-  else window.SeaGame.stop();
-  if (menu) {
-    $("subIcon").textContent = menu.icon;
-    $("subTitle").textContent = menu.title;
-  } else {
-    renderStars();
-  }
+  const game = GAMES[location.hash.slice(1)] || null; // 없는 주소면 홈으로
+  if (currentGame && currentGame !== game) currentGame.stop();
+  for (const g of Object.values(GAMES)) $(g.screen).hidden = g !== game;
+  $("home").hidden = !!game;
+  if (game && game !== currentGame) game.start();
+  currentGame = game;
+  if (!game) renderStars();
   window.scrollTo(0, 0);
 }
-$("backBtn").addEventListener("click", () => {
-  blip(440);
-  location.hash = "";
-});
 // '집으로'는 꾹(1초) 눌러야 나가기 — 아이가 실수로 나가지 않게
 function holdToExit(btn, ms = 1000) {
   const label = btn.textContent;
@@ -159,7 +149,7 @@ function holdToExit(btn, ms = 1000) {
   // 키보드(Enter/Space)로는 바로 나가기
   btn.addEventListener("click", (e) => { if (e.detail === 0) exit(); });
 }
-holdToExit($("seaBackBtn"));
+document.querySelectorAll(".hold-back").forEach((btn) => holdToExit(btn));
 window.addEventListener("hashchange", route);
 
 // ---------- 시작 ----------
