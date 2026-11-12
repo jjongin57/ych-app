@@ -135,10 +135,31 @@ $("backBtn").addEventListener("click", () => {
   blip(440);
   location.hash = "";
 });
-$("seaBackBtn").addEventListener("click", () => {
-  blip(440);
-  location.hash = "";
-});
+// '집으로'는 꾹(1초) 눌러야 나가기 — 아이가 실수로 나가지 않게
+function holdToExit(btn, ms = 1000) {
+  const label = btn.textContent;
+  let timer = null, resetLabel = null;
+  const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove("holding"); };
+  const exit = () => { cancel(); btn.textContent = label; blip(440); location.hash = ""; };
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    btn.classList.add("holding");
+    timer = setTimeout(exit, ms);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
+    btn.addEventListener(type, () => {
+      if (!timer) return;
+      cancel();
+      btn.textContent = "꾹~ 눌러야 나가요";
+      clearTimeout(resetLabel);
+      resetLabel = setTimeout(() => (btn.textContent = label), 1500);
+    }));
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  // 키보드(Enter/Space)로는 바로 나가기
+  btn.addEventListener("click", (e) => { if (e.detail === 0) exit(); });
+}
+holdToExit($("seaBackBtn"));
 window.addEventListener("hashchange", route);
 
 // ---------- 시작 ----------

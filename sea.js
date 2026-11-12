@@ -21,7 +21,9 @@
     blink:  ["..", "KK", ".."],
     squint: ["K.", ".K", "K."], // >
     cry:    ["KK", "BB", ".B"], // ㅠ
+    happy:  [".K.", "K.K", "..."], // ^ (눈웃음)
   };
+  const HEART = [".X.X.", "XWXXX", "XXXXX", ".XXX.", "..X.."];
 
   // ---------- 픽셀 스프라이트 만들기 ----------
   // 도형으로 그린 뒤 → 색을 팔레트로 딱 맞추고 → 진한 외곽선을 둘러서 픽셀아트 느낌을 냄
@@ -118,7 +120,7 @@
 
   // ---------- 바다 친구들 ----------
   function buildSpecies() {
-    const list = [];
+    const list = [], rare = [];
     const add = (id, name, kind, def, opts = {}) => {
       const sp = {
         id, name, kind,
@@ -127,7 +129,7 @@
         ...opts,
       };
       sp.layer = sp.frames[0].w * sp.frames[0].h;
-      list.push(sp);
+      (opts.rare ? rare : list).push(sp);
       return sp;
     };
 
@@ -336,7 +338,74 @@
       },
     }, { speed: [6, 10], weight: 1.5, fps: 5, bobA: 0, noFlip: true });
 
-    return list;
+    // ===== 희귀 친구들 (가끔 한 번씩 반짝이며 지나감) =====
+    add("gold", "황금 물고기", "fish", {
+      w: 20, h: 13, eyes: [[15, 4]],
+      draw: (g, f) => {
+        const s = f ? 1 : -1, c = "#ffd23f", d = "#f5a623";
+        g.poly([[5, 6.5], [0, 1 + s], [2, 6.5], [0, 12 + s]], d);
+        g.poly([[7, 2.5], [11, 0], [15, 3]], d);
+        g.ell(11, 6.5, 8, 5, c);
+        g.atop(() => {
+          g.ell(10, 4, 5, 1.6, "#fff3a0");
+          g.ell(11, 10, 6, 1.5, "#f5b82e");
+          g.rect(17, 8, 1, 1, "#c0504a");
+        });
+        g.poly([[13, 8], [10, 11 + s * .5], [14, 10]], d);
+      },
+    }, { rare: true, speed: [16, 22], fps: 6, bobA: 3, sparkle: true });
+
+    add("sunfish", "개복치", "fish", {
+      w: 32, h: 41, eyes: [[24, 15]],
+      draw: (g, f) => {
+        const s = f ? 1 : -1, c = "#9fb3c4", d = "#7f95a8";
+        g.poly([[13, 12], [17 + s * 2, 0], [21, 12]], d); // 위 지느러미
+        g.poly([[13, 28], [17 - s * 2, 40], [21, 28]], d); // 아래 지느러미
+        g.ell(4, 20, 3.5, 10, d); // 꼬리
+        g.ell(17, 20, 13.5, 11.5, c);
+        g.atop(() => {
+          g.ell(18, 28, 14, 5, "#dfe8ef");
+          for (const [x, y] of [[10, 14], [14, 11], [8, 20], [13, 18]]) g.rect(x, y, 2, 1, "#b8c9d6");
+          g.rect(29, 21, 2, 1, "#5b2a3a");
+        });
+        g.poly([[22, 19], [19, 22 + s * .5], [23, 22]], d);
+      },
+    }, { rare: true, speed: [6, 9], fps: 2, bobA: 2 });
+
+    add("humpback", "혹등고래", "whale", {
+      w: 108, h: 42, eyes: [[88, 17]],
+      draw: (g, f) => {
+        const s = f ? 1 : -1, c = "#3b4f6b", m = 17;
+        g.poly([[10, m], [0, m - 10 + s * 2], [4, m], [0, m + 10 + s * 2]], c); // 꼬리
+        g.poly([[34, m - 9], [10, m - 2], [10, m + 2], [34, m + 10]], c);
+        g.poly([[44, m - 12], [48, m - 15], [52, m - 12]], c); // 작은 등지느러미
+        g.ell(60, m, 34, 12.5, c);
+        g.ell(91, m + 2, 16, 10, c);
+        g.atop(() => {
+          g.ell(68, m + 11, 40, 6.5, "#dfe6ee");
+          for (let y = m + 6; y < m + 16; y += 2) g.rect(40, y, 66, 1, "#b9c6d4"); // 배 주름
+          for (const x of [86, 92, 98]) g.rect(x, m - 6, 2, 1, "#2c3d55"); // 혹
+          g.rect(82, m + 4, 24, 1, "#22324a"); // 입
+        });
+        g.poly([[72, m + 6], [50, m + 21 + s], [55, m + 22 + s], [78, m + 8]], "#e8eef3"); // 긴 가슴지느러미
+      },
+    }, { rare: true, speed: [7, 10], fps: 1.5, bobA: 2 });
+
+    add("manta", "만타가오리", "ray", {
+      w: 48, h: 27, eyes: [[41, 8], [41, 16]],
+      draw: (g, f) => {
+        const c = "#2c3e57", a = f ? 3 : 0, m = 13;
+        g.rect(0, m, 12, 1, c); // 꼬리
+        g.poly([[46, m - 3], [47, m], [46, m + 3], [32, m + 7], [22, 26 - a], [15, m + 3],
+          [10, m], [15, m - 3], [22, a], [32, m - 7]], c);
+        g.ell(46, m - 4, 2, 1.5, c); g.ell(46, m + 4, 2, 1.5, c); // 머리 지느러미
+        g.atop(() => {
+          g.ell(36, m - 4, 4, 1.5, "#cfd8e3"); g.ell(36, m + 4, 4, 1.5, "#cfd8e3");
+        });
+      },
+    }, { rare: true, speed: [10, 14], fps: 1.5, bobA: 4 });
+
+    return { list, rare };
   }
 
   // ---------- 바닥 장식 ----------
@@ -401,6 +470,15 @@
       setTimeout(() => tone({ type: "triangle", f0: 700, f1: 300, dur: .7, vol: .14, vib: 9 }), 330);
     },
     pop: () => tone({ f0: 300, f1: 900, dur: .08, vol: .1 }),
+    plop: () => tone({ f0: 700, f1: 250, dur: .12, vol: .12 }),
+    munch: () => {
+      tone({ type: "square", f0: 300, f1: 220, dur: .06, vol: .06 });
+      setTimeout(() => tone({ type: "square", f0: 340, f1: 240, dur: .06, vol: .06 }), 110);
+    },
+    giggle: () => [700, 880, 1050].forEach((f, i) =>
+      setTimeout(() => tone({ f0: f, f1: f * 1.2, dur: .07, vol: .1 }), i * 80)),
+    chime: () => [880, 1175, 1568, 2093].forEach((f, i) =>
+      setTimeout(() => tone({ type: "triangle", f0: f, f1: f * 1.01, dur: .25, vol: .1 }), i * 110)),
   };
   function say(text) {
     try {
@@ -413,7 +491,9 @@
   }
 
   // ---------- 상태 ----------
-  let SPECIES = null, DECOR = null;
+  let SPECIES = null, RARE = null, DECOR = null;
+  let foods = [], rareT = 30;
+  const pointers = new Map();
   let canvas, ctx, hintEl;
   const low = document.createElement("canvas");
   const lctx = low.getContext("2d");
@@ -538,6 +618,8 @@
       taps: 0, lastTap: 0, flinch: 0, puff: 0, boost: 1,
       bubble: null, nameT: 0, blink: rand(1, 5), blinkT: 0, tearT: 0,
       state: "swim", cryT: 0, fvx: 0, fvy: 0, fleeDir: 1, pose: null,
+      happy: 0, petT: 0, petAcc: 0, lastGiggle: -9, eatCD: 0,
+      rare: !!sp.rare, entered: false, born: time,
     };
     if (sp.kind === "crab") c.y = crabY(c);
     // 큰 생물이 뒤에 오도록 정렬해서 넣기
@@ -546,8 +628,22 @@
   }
 
   function populate() {
-    creatures = []; particles = []; respawns = [];
+    creatures = []; particles = []; respawns = []; foods = [];
+    rareT = rand(20, 35);
     for (let i = 0; i < target; i++) spawn(pickSpecies(), false);
+  }
+
+  function spawnRare() {
+    const pool = RARE.filter((s) => W >= s.frames[0].w * 1.2);
+    if (!pool.length) return;
+    spawn(pool[Math.floor(Math.random() * pool.length)], true);
+    sfx.chime();
+  }
+
+  // 테스트용: 희귀 친구 전부를 화면 안에 바로 띄우기 (콘솔에서 SeaGame.showRare())
+  function showRare() {
+    if (!running) return;
+    for (const sp of RARE) spawn(sp, false);
   }
 
   // ---------- 현재 모습(프레임/위치) ----------
@@ -628,22 +724,119 @@
     }
   }
 
-  function onPointer(e) {
-    e.preventDefault();
-    if (hintEl) hintEl.classList.add("hide");
-    // 실제로 화면에 그려진 크기 기준으로 좌표 계산 (화면 회전 중이어도 정확하게)
+  // ---------- 터치: 톡(누르기) / 문지르기·꾹(쓰다듬기) / 빈 곳(먹이) ----------
+  const MOVE_CSS = 14; // 손가락이 이만큼(css px) 넘게 움직이면 '문지르기'
+  const HOLD_PET = .45; // 생물 위에서 이만큼(초) 누르고 있으면 쓰다듬기
+
+  // 실제로 화면에 그려진 크기 기준으로 좌표 계산 (화면 회전 중이어도 정확하게)
+  function toArt(e) {
     const rect = canvas.getBoundingClientRect();
-    const k = canvas.width / rect.width / (P * dpr);
-    const ax = (e.clientX - rect.left) * k, ay = (e.clientY - rect.top) * (canvas.height / rect.height) / (P * dpr);
+    return [
+      (e.clientX - rect.left) * (canvas.width / rect.width) / (P * dpr),
+      (e.clientY - rect.top) * (canvas.height / rect.height) / (P * dpr),
+    ];
+  }
+
+  function creatureAt(ax, ay) {
     for (let i = creatures.length - 1; i >= 0; i--) {
       const c = creatures[i];
-      if (c.state === "swim" && hit(c, ax, ay)) return poke(c, ax);
+      if (c.state === "swim" && hit(c, ax, ay)) return c;
     }
-    // 빈 곳을 누르면 보글보글
-    sfx.pop();
-    for (let i = 0; i < 6; i++) {
-      particles.push({ t: "bubble", x: ax + rand(-3, 3), y: ay + rand(-3, 3), vx: 0, vy: -rand(14, 28), s: 1 + Math.floor(rand(0, 3)), ph: rand(0, 6), life: 9 });
+    return null;
+  }
+
+  function onDown(e) {
+    e.preventDefault();
+    if (hintEl) hintEl.classList.add("hide");
+    try { canvas.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    const [ax, ay] = toArt(e);
+    pointers.set(e.pointerId, { x: ax, y: ay, t: time, moved: 0, c: creatureAt(ax, ay), petted: false });
+  }
+
+  function onMove(e) {
+    const p = pointers.get(e.pointerId);
+    if (!p) return;
+    const [ax, ay] = toArt(e);
+    const d = Math.hypot(ax - p.x, ay - p.y);
+    p.moved += d; p.x = ax; p.y = ay;
+    if (p.moved * P >= MOVE_CSS) {
+      const c = creatureAt(ax, ay);
+      if (c) pet(c, d, p);
     }
+  }
+
+  function onUp(e) {
+    const p = pointers.get(e.pointerId);
+    pointers.delete(e.pointerId);
+    if (!p || e.type === "pointercancel" || p.petted || p.moved * P >= MOVE_CSS) return;
+    const c = creatureAt(p.x, p.y);
+    if (c) poke(c, p.x);
+    else dropFood(p.x, p.y);
+  }
+
+  const heart = (x, y) =>
+    particles.push({ t: "heart", x, y, vx: rand(-4, 4), vy: -rand(10, 16), life: 1.2, max: 1.2 });
+
+  function pet(c, amount, p) {
+    p.petted = true;
+    const b = c.sp.frames[0];
+    c.petT = .5;            // 쓰다듬는 동안 천천히 (손가락에서 도망가지 않게)
+    c.happy = Math.max(c.happy, .8);
+    c.taps = 0;             // 쓰다듬으면 진정
+    c.boost = 1;
+    c.petAcc += amount;
+    while (c.petAcc > 6) {
+      c.petAcc -= 6;
+      heart(c.x + b.w / 2 + rand(-b.w * .3, b.w * .3), c.y + rand(0, b.h * .3));
+    }
+    if (time - c.lastGiggle > 1.6) {
+      c.lastGiggle = time;
+      c.bubble = { text: "히히 좋아~ 💕", t: 1.3 };
+      sfx.giggle();
+    }
+  }
+
+  // ---------- 먹이 ----------
+  function dropFood(ax, ay) {
+    sfx.plop();
+    for (let i = 0; i < 3; i++) {
+      foods.push({ x: ax + rand(-4, 4), y: ay + rand(-3, 2), vy: rand(7, 11), ph: rand(0, 6), life: 14, eaten: false });
+    }
+    while (foods.length > 36) foods.shift();
+    for (let i = 0; i < 3; i++) {
+      particles.push({ t: "bubble", x: ax + rand(-3, 3), y: ay, vx: 0, vy: -rand(14, 24), s: 1 + Math.floor(rand(0, 2)), ph: rand(0, 6), life: 9 });
+    }
+  }
+
+  const floorAt = (x) => sandTop[clamp(Math.round(x), 0, W - 1)] - 1;
+
+  function mouth(c) {
+    const b = c.sp.frames[0];
+    if (c.sp.noFlip) return [c.x + b.w / 2, c.y + b.h * .6];
+    return [c.x + (c.dir > 0 ? b.w * .88 : b.w * .12), c.y + b.h * .55];
+  }
+
+  function nearestFood(c) {
+    const b = c.sp.frames[0];
+    const cx = c.x + b.w / 2, cy = c.y + b.h / 2;
+    let best = null, bd = 90 * 90;
+    for (const fd of foods) {
+      if (fd.eaten) continue;
+      if (c.sp.kind === "crab" && fd.y < floorAt(fd.x) - 1) continue; // 꽃게는 바닥에 떨어진 것만
+      const d = (fd.x - cx) ** 2 + (fd.y - cy) ** 2;
+      if (d < bd) { bd = d; best = fd; }
+    }
+    return best;
+  }
+
+  function eat(c, fd, mx, my) {
+    fd.eaten = true;
+    c.eatCD = 1.6;
+    c.happy = 1.2;
+    c.taps = 0;
+    c.bubble = { text: "냠냠!", t: 1 };
+    heart(mx, my - 3);
+    sfx.munch();
   }
 
   // ---------- 움직임 ----------
@@ -665,21 +858,57 @@
     c.blink -= dt;
     if (c.blink <= 0) { c.blinkT = .14; c.blink = rand(2.5, 6); }
     c.blinkT -= dt;
+    c.happy = Math.max(0, c.happy - dt);
+    c.petT = Math.max(0, c.petT - dt);
+    c.eatCD = Math.max(0, c.eatCD - dt);
     const [top, bottom] = bounds(sp);
 
     if (c.state === "swim") {
       if (c.taps && time - c.lastTap > 4) c.taps = 0; // 한참 지나면 다시 진정
       c.boost += (1 - c.boost) * Math.min(1, dt * 1.2);
-      c.x += c.dir * c.speed * c.boost * dt;
-      if (sp.kind === "crab") c.y = crabY(c);
-      else {
-        if (Math.random() < dt * .15) c.targetY = rand(top, bottom);
-        c.baseY += (c.targetY - c.baseY) * Math.min(1, dt * .5);
-        c.y = c.baseY + Math.sin(time * sp.bobF + c.phase) * sp.bobA;
+      const food = c.petT <= 0 && c.eatCD <= 0 && sp.kind !== "jelly" ? nearestFood(c) : null;
+
+      if (food) {
+        // 먹이 쪽으로 헤엄쳐 가기
+        const cx = c.x + b.w / 2;
+        if (Math.abs(food.x - cx) > 2) c.dir = food.x > cx ? 1 : -1;
+        const [mx, my] = mouth(c);
+        const step = c.speed * 1.8 * dt;
+        c.x += clamp(food.x - mx, -step, step);
+        if (sp.kind === "crab") c.y = crabY(c);
+        else {
+          // 바닥에 떨어진 먹이도 먹을 수 있게, 먹이 쫓을 때는 바닥 가까이까지 내려감
+          const low = Math.max(bottom, floorAt(cx) - b.h * .55 + 1);
+          c.targetY = clamp(c.baseY + (food.y - my), top, low);
+          c.baseY += (c.targetY - c.baseY) * Math.min(1, dt * 3);
+          c.y = c.baseY + Math.sin(time * sp.bobF + c.phase) * sp.bobA * .3;
+        }
+        const [mx2, my2] = mouth(c);
+        if (Math.hypot(food.x - mx2, food.y - my2) < Math.max(3, b.h * .3)) eat(c, food, mx2, my2);
+      } else {
+        const mul = c.petT > 0 ? .12 : c.boost; // 쓰다듬는 중엔 거의 멈춤
+        c.x += c.dir * c.speed * mul * dt;
+        if (sp.kind === "crab") c.y = crabY(c);
+        else {
+          if (Math.random() < dt * .15) c.targetY = rand(top, bottom);
+          c.baseY += (c.targetY - c.baseY) * Math.min(1, dt * .5);
+          c.y = c.baseY + Math.sin(time * sp.bobF + c.phase) * sp.bobA;
+        }
+        if (!c.rare && c.petT <= 0) {
+          if (c.dir > 0 && c.x > W - b.w * .6) c.dir = -1;
+          else if (c.dir < 0 && c.x < -b.w * .4) c.dir = 1;
+          else if (Math.random() < dt * .03) c.dir *= -1;
+        }
       }
-      if (c.dir > 0 && c.x > W - b.w * .6) c.dir = -1;
-      else if (c.dir < 0 && c.x < -b.w * .4) c.dir = 1;
-      else if (Math.random() < dt * .03) c.dir *= -1;
+
+      // 희귀 친구는 화면을 한 번 지나가고 사라짐 + 반짝이
+      if (c.rare) {
+        if (!c.entered && c.x + b.w > 4 && c.x < W - 4) c.entered = true;
+        if (c.entered && (c.x > W + 4 || c.x < -b.w - 4)) c.state = "gone";
+        if ((sp.sparkle || time - c.born < 6) && Math.random() < dt * 12) {
+          particles.push({ t: "spark", x: c.x + rand(0, b.w), y: c.y + rand(0, b.h), vx: 0, vy: -3, life: .6, max: .6 });
+        }
+      }
     } else if (c.state === "cry") {
       c.cryT -= dt;
       spawnTears(c, dt);
@@ -705,10 +934,35 @@
       particles.push({ t: "bubble", x: rand(0, W), y: seaFloor + 4, vx: 0, vy: -rand(10, 20), s: Math.random() < .3 ? 3 : Math.random() < .6 ? 2 : 1, ph: rand(0, 6), life: 99 });
     }
 
+    // 생물 위에 손가락을 꾹 대고 있으면 쓰다듬기
+    for (const p of pointers.values()) {
+      if (p.c && p.c.state === "swim" && time - p.t > HOLD_PET && hit(p.c, p.x, p.y)) pet(p.c, dt * 25, p);
+    }
+
     for (const c of creatures) updateCreature(c, dt);
-    const before = creatures.length;
-    creatures = creatures.filter((c) => c.state !== "gone");
-    for (let i = creatures.length; i < before; i++) respawns.push(rand(2, 4.5));
+    const gone = creatures.filter((c) => c.state === "gone");
+    if (gone.length) {
+      creatures = creatures.filter((c) => c.state !== "gone");
+      for (const c of gone) if (!c.rare) respawns.push(rand(2, 4.5));
+    }
+
+    // 가끔 희귀 친구 등장
+    rareT -= dt;
+    if (rareT <= 0) {
+      rareT = rand(35, 60);
+      if (!creatures.some((c) => c.rare)) spawnRare();
+    }
+
+    // 먹이는 천천히 가라앉아 바닥에 멈춤
+    for (const fd of foods) {
+      fd.life -= dt;
+      const floor = floorAt(fd.x);
+      if (fd.y < floor) {
+        fd.y = Math.min(floor, fd.y + fd.vy * dt);
+        fd.x += Math.sin(time * 2 + fd.ph) * dt * 3;
+      }
+    }
+    foods = foods.filter((fd) => !fd.eaten && fd.life > 0);
 
     for (let i = respawns.length - 1; i >= 0; i--) {
       if ((respawns[i] -= dt) <= 0) {
@@ -723,6 +977,8 @@
         p.y += p.vy * dt;
         p.x += Math.sin(time * 3 + p.ph) * dt * 4;
         if (p.y < 3) p.life = 0;
+      } else if (p.t === "heart" || p.t === "spark") {
+        p.x += p.vx * dt; p.y += p.vy * dt;
       } else if (p.t === "ink") {
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2;
@@ -762,7 +1018,7 @@
     lctx.drawImage(spr.canvas, 0, 0);
     lctx.globalAlpha = 1;
 
-    const mood = c.state !== "swim" ? "cry" : c.flinch > 0 ? "squint" : c.blinkT > 0 ? "blink" : "open";
+    const mood = c.state !== "swim" ? "cry" : c.flinch > 0 ? "squint" : c.happy > 0 ? "happy" : c.blinkT > 0 ? "blink" : "open";
     for (const [ex, ey, mir] of eyes) drawEye(EYES[mood], ex + 1, ey + 1, !!mir);
     lctx.restore();
 
@@ -788,8 +1044,35 @@
       } else if (p.t === "ink") {
         lctx.fillStyle = `rgba(45,25,70,${(.75 * p.life) / p.max})`;
         lctx.beginPath(); lctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); lctx.fill();
+      } else if (p.t === "heart") {
+        lctx.globalAlpha = Math.min(1, (p.life / p.max) * 2);
+        for (let r = 0; r < HEART.length; r++) {
+          for (let k = 0; k < HEART[r].length; k++) {
+            const ch = HEART[r][k];
+            if (ch === ".") continue;
+            lctx.fillStyle = ch === "W" ? "#ffd0de" : "#ff5c8a";
+            lctx.fillRect(x - 2 + k, y - 2 + r, 1, 1);
+          }
+        }
+        lctx.globalAlpha = 1;
+      } else if (p.t === "spark") {
+        lctx.globalAlpha = Math.min(1, (p.life / p.max) * 2);
+        lctx.fillStyle = "#fff6a8";
+        lctx.fillRect(x, y - 1, 1, 3); lctx.fillRect(x - 1, y, 3, 1);
+        lctx.globalAlpha = 1;
       }
     }
+  }
+
+  function drawFoods() {
+    for (const fd of foods) {
+      const x = Math.round(fd.x), y = Math.round(fd.y);
+      lctx.globalAlpha = Math.min(1, fd.life / 2);
+      lctx.fillStyle = "#5a2a12"; lctx.fillRect(x - 1, y - 1, 4, 4);
+      lctx.fillStyle = "#c8743a"; lctx.fillRect(x, y, 2, 2);
+      lctx.fillStyle = "#f2b071"; lctx.fillRect(x, y, 1, 1);
+    }
+    lctx.globalAlpha = 1;
   }
 
   function drawWeeds() {
@@ -865,6 +1148,7 @@
 
     drawWeeds();
     for (const c of creatures) drawCreature(c);
+    drawFoods();
     drawParticles();
 
     // 픽셀 그대로 확대
@@ -910,14 +1194,22 @@
 
   // ---------- 공개 API ----------
   window.SeaGame = {
+    showRare: () => showRare(),
     start(cv, hint) {
       if (running) return;
       canvas = cv; ctx = cv.getContext("2d"); hintEl = hint;
-      if (!SPECIES) { SPECIES = buildSpecies(); DECOR = buildDecor(); }
+      if (!SPECIES) {
+        const built = buildSpecies();
+        SPECIES = built.list; RARE = built.rare; DECOR = buildDecor();
+      }
       layout();
       populate();
+      pointers.clear();
       if (hintEl) hintEl.classList.remove("hide");
-      canvas.addEventListener("pointerdown", onPointer);
+      canvas.addEventListener("pointerdown", onDown);
+      canvas.addEventListener("pointermove", onMove);
+      canvas.addEventListener("pointerup", onUp);
+      canvas.addEventListener("pointercancel", onUp);
       window.addEventListener("resize", onResize);
       running = true;
       last = performance.now();
@@ -927,7 +1219,11 @@
       if (!running) return;
       running = false;
       cancelAnimationFrame(raf);
-      canvas.removeEventListener("pointerdown", onPointer);
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
+      pointers.clear();
       window.removeEventListener("resize", onResize);
       try { speechSynthesis.cancel(); } catch { /* ignore */ }
     },
