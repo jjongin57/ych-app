@@ -427,7 +427,7 @@
     const cssW = canvas.clientWidth || window.innerWidth;
     const cssH = canvas.clientHeight || window.innerHeight;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    P = clamp(Math.floor(Math.min(cssW, cssH) / 130), 2, 8); // 픽셀 하나의 크기
+    P = clamp(Math.floor(Math.min(cssW, cssH) / 190), 2, 6); // 픽셀 하나의 크기 (작을수록 생물이 작게 보임)
     W = Math.ceil(cssW / P); H = Math.ceil(cssH / P);
     canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
     low.width = W; low.height = H;
@@ -438,7 +438,7 @@
     for (let x = 0; x < W; x++)
       sandTop[x] = H - sandH + Math.round(Math.sin(x * .07) * 2 + Math.sin(x * .19 + 1) * 1);
     seaFloor = H - sandH - 3;
-    target = clamp(Math.round((W * H) / 3800), 6, 11);
+    target = clamp(Math.round((W * H) / 5500), 6, 14);
 
     let s = 7919;
     const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
@@ -809,7 +809,8 @@
 
   // 말풍선(bubble) / 이름표(tag) — 글자는 선명하게 큰 캔버스에 그림
   function label(text, cx, y, style, alpha = 1) {
-    const fs = Math.round((style === "bubble" ? 20 : 17) * dpr);
+    const small = canvas.height / dpr < 500 ? .8 : 1; // 낮은 화면(가로 모드 휴대폰)은 글씨도 조금 작게
+    const fs = Math.round((style === "bubble" ? 20 : 17) * small * dpr);
     ctx.font = `${fs}px Jua, "Malgun Gothic", sans-serif`;
     const tw = ctx.measureText(text).width;
     const bw = tw + fs * 1.2, bh = fs * 1.6;

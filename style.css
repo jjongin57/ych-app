@@ -201,6 +201,28 @@ body {
 }
 .sea-hint.hide { opacity: 0; }
 
+/* ---------- 가로 모드 휴대폰 (화면 높이가 낮을 때) ---------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .screen { padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: 16px;
+            padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .hero { margin: 0 0 12px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .sun { font-size: 40px; }
+  .greeting { display: none; }
+  .title { font-size: 24px; margin: 0; }
+  .menu { grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .card { min-height: 0; border-radius: 22px; }
+  .icon { font-size: 44px; }
+  .label { font-size: 16px; }
+  .stickers { margin-top: 14px; padding: 8px 16px; }
+  .stickers-title { font-size: 16px; }
+  .stars { font-size: 20px; }
+
+  .sea-top { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); top: 8px; }
+  .sea-top .back { font-size: 16px; padding: 8px 14px; }
+  .sea-title { font-size: 18px; }
+  .sea-hint { font-size: 16px; padding: 8px 16px; bottom: 10px; }
+}
+
 /* 움직임 줄이기 설정 존중 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
