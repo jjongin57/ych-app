@@ -421,13 +421,18 @@
   let weeds = [], rays = [];
   let creatures = [], particles = [], respawns = [];
   let time = 0, last = 0, raf = 0, running = false, bubbleT = 0;
+  let lastCssW = 0, lastCssH = 0;
 
   // ---------- 화면 크기 맞추기 ----------
   function layout() {
     const cssW = canvas.clientWidth || window.innerWidth;
     const cssH = canvas.clientHeight || window.innerHeight;
+    lastCssW = cssW; lastCssH = cssH;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    P = clamp(Math.floor(Math.min(cssW, cssH) / 190), 2, 6); // 픽셀 하나의 크기 (작을수록 생물이 작게 보임)
+    // 픽셀 하나의 크기 (작을수록 생물이 작게 보임)
+    // 화면을 돌려도 생물 크기는 그대로, 바다만 넓어지도록 '기기 화면의 짧은 변' 기준으로 정함
+    const deviceShort = Math.min(screen.width || cssW, screen.height || cssH);
+    P = clamp(Math.floor(Math.min(deviceShort, Math.max(cssW, cssH) * .6) / 190), 2, 6);
     W = Math.ceil(cssW / P); H = Math.ceil(cssH / P);
     canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
     low.width = W; low.height = H;
@@ -626,8 +631,10 @@
   function onPointer(e) {
     e.preventDefault();
     if (hintEl) hintEl.classList.add("hide");
+    // 실제로 화면에 그려진 크기 기준으로 좌표 계산 (화면 회전 중이어도 정확하게)
     const rect = canvas.getBoundingClientRect();
-    const ax = (e.clientX - rect.left) / P, ay = (e.clientY - rect.top) / P;
+    const k = canvas.width / rect.width / (P * dpr);
+    const ax = (e.clientX - rect.left) * k, ay = (e.clientY - rect.top) * (canvas.height / rect.height) / (P * dpr);
     for (let i = creatures.length - 1; i >= 0; i--) {
       const c = creatures[i];
       if (c.state === "swim" && hit(c, ax, ay)) return poke(c, ax);
@@ -883,12 +890,15 @@
     if (!running) return;
     const dt = Math.min(.05, (ts - last) / 1000);
     last = ts;
+    // 화면 회전 등으로 실제 크기가 바뀌었으면 다시 맞추기 (아이폰 홈 화면 앱은 resize 신호가 늦거나 빠름)
+    if (canvas.clientWidth && (canvas.clientWidth !== lastCssW || canvas.clientHeight !== lastCssH)) onResize();
     update(dt);
     render();
     raf = requestAnimationFrame(loop);
   }
 
   function onResize() {
+    if (!running) return;
     layout();
     for (const c of creatures) {
       const [top, bottom] = bounds(c.sp);
