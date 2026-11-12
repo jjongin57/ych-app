@@ -14,7 +14,7 @@
   };
 
   const OUTLINE = "#1b2440";
-  const EYE_COL = { K: "#14182b", W: "#ffffff", B: "#7fd3ff" };
+  const EYE_COL = { K: "#14182b", W: "#ffffff", B: "#7fd3ff", Y: "#ffd23f" };
   // 눈 모양 (2x3 픽셀). 오른쪽을 보는 기준
   const EYES = {
     open:   ["KW", "KK", "KK"],
@@ -22,6 +22,7 @@
     squint: ["K.", ".K", "K."], // >
     cry:    ["KK", "BB", ".B"], // ㅠ
     happy:  [".K.", "K.K", "..."], // ^ (눈웃음)
+    giant:  ["YKY", "YKY", "YKY"], // 거대 생물: 노란 눈에 세로 동공
   };
   const HEART = [".X.X.", "XWXXX", "XXXXX", ".XXX.", "..X.."];
 
@@ -120,7 +121,7 @@
 
   // ---------- 바다 친구들 ----------
   function buildSpecies() {
-    const list = [], rare = [];
+    const list = [];
     const add = (id, name, kind, def, opts = {}) => {
       const sp = {
         id, name, kind,
@@ -129,7 +130,7 @@
         ...opts,
       };
       sp.layer = sp.frames[0].w * sp.frames[0].h;
-      (opts.rare ? rare : list).push(sp);
+      list.push(sp);
       return sp;
     };
 
@@ -338,74 +339,57 @@
       },
     }, { speed: [6, 10], weight: 1.5, fps: 5, bobA: 0, noFlip: true });
 
-    // ===== 희귀 친구들 (가끔 한 번씩 반짝이며 지나감) =====
-    add("gold", "황금 물고기", "fish", {
-      w: 20, h: 13, eyes: [[15, 4]],
+    // ===== 거대 생물 (가끔 나타나는 보스) — 크라켄은 따로 그때그때 그림 =====
+    const mosaDef = {
+      w: 150, h: 52, eyes: [[118, 15]],
       draw: (g, f) => {
-        const s = f ? 1 : -1, c = "#ffd23f", d = "#f5a623";
-        g.poly([[5, 6.5], [0, 1 + s], [2, 6.5], [0, 12 + s]], d);
-        g.poly([[7, 2.5], [11, 0], [15, 3]], d);
-        g.ell(11, 6.5, 8, 5, c);
+        const s = f ? 1 : -1, m = 22, c = "#3d5a4a", d = "#2b4236", open = f ? 5 : 1;
+        g.poly([[16, m], [2, m - 8 + s * 2], [9, m]], d);            // 꼬리지느러미 위
+        g.poly([[16, m + 1], [0, m + 14 + s * 2], [10, m + 2]], d);  // 꼬리지느러미 아래
+        g.poly([[44, m - 8], [12, m - 1.5], [12, m + 2], [44, m + 10]], c); // 꼬리
+        g.poly([[50, m + 9], [40, m + 22 - s], [48, m + 23 - s], [60, m + 11]], d); // 뒷지느러미
+        g.ell(72, m + 1, 36, 12.5, c); // 몸통
+        g.ell(110, m - 1, 16, 9, c);   // 머리
+        g.poly([[106, m + 2], [138, m + 3], [148, m + 4 + open], [146, m + 6 + open], [106, m + 9]], "#5a1020"); // 입속
+        g.poly([[104, m - 8], [130, m - 6], [149, m - 2], [149, m + 1], [104, m + 1]], c); // 위턱
+        g.poly([[104, m + 3], [144, m + 4 + open], [145, m + 7 + open], [104, m + 9]], c); // 아래턱
         g.atop(() => {
-          g.ell(10, 4, 5, 1.6, "#fff3a0");
-          g.ell(11, 10, 6, 1.5, "#f5b82e");
-          g.rect(17, 8, 1, 1, "#c0504a");
+          g.ell(80, m + 11, 46, 5.5, "#c9d6c0");
+          for (let x = 30; x < 100; x += 6) g.rect(x, m - 9 + Math.round(Math.abs(x - 72) / 12), 3, 1, d); // 등 비늘
         });
-        g.poly([[13, 8], [10, 11 + s * .5], [14, 10]], d);
+        for (let x = 112; x < 146; x += 3) { // 이빨
+          g.rect(x, m + 1, 1, 2, "#fffbe8");
+          const ly = m + 3 + ((x - 104) / 40) * (1 + open);
+          g.rect(x + 1, ly - 2, 1, 2, "#fffbe8");
+        }
+        g.poly([[84, m + 9], [72, m + 24 + s], [81, m + 25 + s], [94, m + 11]], d); // 앞지느러미
+        g.rect(114, 12, 3, 1, "#14182b"); g.rect(117, 13, 3, 1, "#14182b"); // 찡그린 눈썹
       },
-    }, { rare: true, speed: [16, 22], fps: 6, bobA: 3, sparkle: true });
-
-    add("sunfish", "개복치", "fish", {
-      w: 32, h: 41, eyes: [[24, 15]],
-      draw: (g, f) => {
-        const s = f ? 1 : -1, c = "#9fb3c4", d = "#7f95a8";
-        g.poly([[13, 12], [17 + s * 2, 0], [21, 12]], d); // 위 지느러미
-        g.poly([[13, 28], [17 - s * 2, 40], [21, 28]], d); // 아래 지느러미
-        g.ell(4, 20, 3.5, 10, d); // 꼬리
-        g.ell(17, 20, 13.5, 11.5, c);
-        g.atop(() => {
-          g.ell(18, 28, 14, 5, "#dfe8ef");
-          for (const [x, y] of [[10, 14], [14, 11], [8, 20], [13, 18]]) g.rect(x, y, 2, 1, "#b8c9d6");
-          g.rect(29, 21, 2, 1, "#5b2a3a");
-        });
-        g.poly([[22, 19], [19, 22 + s * .5], [23, 22]], d);
+    };
+    const megaR = 16;
+    const megaDef = shark({
+      L: 150, r: megaR, dorsal: 16, pec: 12, back: "#4a5562", fin: "#363f4a", belly: "#d9dde2",
+      mouth: "#3a0d18", mouthW: 22,
+      pattern: (g, f, m) => { // 상처 자국
+        g.rect(70, m - 10, 6, 1, "#6b7682"); g.rect(76, m - 9, 4, 1, "#6b7682");
+        g.rect(95, m - 6, 5, 1, "#6b7682");
       },
-    }, { rare: true, speed: [6, 9], fps: 2, bobA: 2 });
-
-    add("humpback", "혹등고래", "whale", {
-      w: 108, h: 42, eyes: [[88, 17]],
-      draw: (g, f) => {
-        const s = f ? 1 : -1, c = "#3b4f6b", m = 17;
-        g.poly([[10, m], [0, m - 10 + s * 2], [4, m], [0, m + 10 + s * 2]], c); // 꼬리
-        g.poly([[34, m - 9], [10, m - 2], [10, m + 2], [34, m + 10]], c);
-        g.poly([[44, m - 12], [48, m - 15], [52, m - 12]], c); // 작은 등지느러미
-        g.ell(60, m, 34, 12.5, c);
-        g.ell(91, m + 2, 16, 10, c);
-        g.atop(() => {
-          g.ell(68, m + 11, 40, 6.5, "#dfe6ee");
-          for (let y = m + 6; y < m + 16; y += 2) g.rect(40, y, 66, 1, "#b9c6d4"); // 배 주름
-          for (const x of [86, 92, 98]) g.rect(x, m - 6, 2, 1, "#2c3d55"); // 혹
-          g.rect(82, m + 4, 24, 1, "#22324a"); // 입
-        });
-        g.poly([[72, m + 6], [50, m + 21 + s], [55, m + 22 + s], [78, m + 8]], "#e8eef3"); // 긴 가슴지느러미
+      extra: (g, f, m) => {
+        const y = Math.round(m + megaR * .4);
+        for (let x = 127; x < 146; x += 3) { // 이빨
+          g.rect(x, y - 1, 1, 2, "#fffbe8");
+          g.rect(x + 1, y + 1, 1, 2, "#fffbe8");
+        }
+        const ey = Math.round(m - megaR * .55); // 찡그린 눈썹
+        g.rect(119, ey - 2, 3, 1, "#14182b"); g.rect(122, ey - 1, 2, 1, "#14182b");
       },
-    }, { rare: true, speed: [7, 10], fps: 1.5, bobA: 2 });
+    });
+    const giants = {
+      mosa: { name: "모사사우루스", banner: "모사사우루스가 나타났다!", frames: pair(mosaDef), eyes: mosaDef.eyes },
+      mega: { name: "메갈로돈", banner: "메갈로돈이 나타났다!", frames: pair(megaDef), eyes: megaDef.eyes },
+    };
 
-    add("manta", "만타가오리", "ray", {
-      w: 48, h: 27, eyes: [[41, 8], [41, 16]],
-      draw: (g, f) => {
-        const c = "#2c3e57", a = f ? 3 : 0, m = 13;
-        g.rect(0, m, 12, 1, c); // 꼬리
-        g.poly([[46, m - 3], [47, m], [46, m + 3], [32, m + 7], [22, 26 - a], [15, m + 3],
-          [10, m], [15, m - 3], [22, a], [32, m - 7]], c);
-        g.ell(46, m - 4, 2, 1.5, c); g.ell(46, m + 4, 2, 1.5, c); // 머리 지느러미
-        g.atop(() => {
-          g.ell(36, m - 4, 4, 1.5, "#cfd8e3"); g.ell(36, m + 4, 4, 1.5, "#cfd8e3");
-        });
-      },
-    }, { rare: true, speed: [10, 14], fps: 1.5, bobA: 4 });
-
-    return { list, rare };
+    return { list, giants };
   }
 
   // ---------- 바닥 장식 ----------
@@ -477,8 +461,16 @@
     },
     giggle: () => [700, 880, 1050].forEach((f, i) =>
       setTimeout(() => tone({ f0: f, f1: f * 1.2, dur: .07, vol: .1 }), i * 80)),
-    chime: () => [880, 1175, 1568, 2093].forEach((f, i) =>
-      setTimeout(() => tone({ type: "triangle", f0: f, f1: f * 1.01, dur: .25, vol: .1 }), i * 110)),
+    rumble: () => { // 우르르르
+      tone({ type: "sawtooth", f0: 120, f1: 55, dur: 2.2, vol: .16, vib: 5 });
+      tone({ type: "triangle", f0: 90, f1: 45, dur: 2.2, vol: .2 });
+    },
+    heartbeat: () => [0, 260, 900, 1160].forEach((ms) => // 쿵쿵… 쿵쿵
+      setTimeout(() => tone({ type: "triangle", f0: 150, f1: 60, dur: .16, vol: .3 }), ms)),
+    roar: () => { // 크아아앙
+      tone({ type: "sawtooth", f0: 260, f1: 70, dur: 1.3, vol: .18, vib: 14 });
+      tone({ type: "square", f0: 180, f1: 55, dur: 1.1, vol: .07, vib: 9 });
+    },
   };
   function say(text) {
     try {
@@ -491,8 +483,8 @@
   }
 
   // ---------- 상태 ----------
-  let SPECIES = null, RARE = null, DECOR = null;
-  let foods = [], rareT = 30;
+  let SPECIES = null, GIANTS = null, DECOR = null;
+  let foods = [], giantT = 30, giant = null, dark = 0, shake = 0, lastTouch = null;
   const pointers = new Map();
   let canvas, ctx, hintEl;
   const low = document.createElement("canvas");
@@ -619,7 +611,7 @@
       bubble: null, nameT: 0, blink: rand(1, 5), blinkT: 0, tearT: 0,
       state: "swim", cryT: 0, fvx: 0, fvy: 0, fleeDir: 1, pose: null,
       happy: 0, petT: 0, petAcc: 0, lastGiggle: -9, eatCD: 0,
-      rare: !!sp.rare, entered: false, born: time,
+      scared: false,
     };
     if (sp.kind === "crab") c.y = crabY(c);
     // 큰 생물이 뒤에 오도록 정렬해서 넣기
@@ -629,21 +621,209 @@
 
   function populate() {
     creatures = []; particles = []; respawns = []; foods = [];
-    rareT = rand(20, 35);
+    giantT = rand(20, 35);
+    giant = null; dark = 0; shake = 0;
     for (let i = 0; i < target; i++) spawn(pickSpecies(), false);
   }
 
-  function spawnRare() {
-    const pool = RARE.filter((s) => W >= s.frames[0].w * 1.2);
-    if (!pool.length) return;
-    spawn(pool[Math.floor(Math.random() * pool.length)], true);
-    sfx.chime();
+  // =====================================================
+  //  거대 생물 이벤트: 크라켄 / 모사사우루스 / 메갈로돈
+  //  경고(어두워짐·쿵쿵) → 등장(포효·흔들림) → 퇴장 → 작은 친구들 복귀
+  // =====================================================
+  const ease = (t) => t * t * (3 - 2 * t);
+
+  function startGiant(kind) {
+    if (giant) return;
+    kind = kind || ["kraken", "mosa", "mega"][Math.floor(Math.random() * 3)];
+    // 작은 친구들은 화면 밖으로 숨기
+    for (const c of creatures) {
+      if (c.state !== "swim") continue;
+      const b = c.sp.frames[0];
+      c.scared = true;
+      c.dir = c.x + b.w / 2 < W / 2 ? -1 : 1;
+      if (Math.random() < .4) c.bubble = { text: "히익!", t: 1.2 };
+    }
+    const common = { kind, t: 0, hitT: 0, roarCD: 0, roarBubble: 0, named: false, darkTarget: .55, shake: 0, bannerT: 3 };
+    if (kind === "kraken") {
+      giant = { ...common, name: "크라켄", banner: "크라켄이 나타났다!", cx: W * rand(.35, .65), rise: 0, roared: false, shape: null };
+      sfx.rumble();
+    } else {
+      const sp = GIANTS[kind], b = sp.frames[0];
+      const gs = clamp(Math.floor((W * .8) / b.w), 1, 2); // 넓은 화면에선 2배로 (가까이 지나가는 느낌)
+      const gw = b.w * gs, gh = b.h * gs;
+      const dir = Math.random() < .5 ? 1 : -1;
+      const baseY = clamp(H * .45 - gh / 2, 2, Math.max(2, seaFloor - gh * .8));
+      giant = {
+        ...common, sp, gs, gw, name: sp.name, banner: sp.banner, dir, x: dir > 0 ? -gw : W, y: baseY, baseY,
+        speed: (W + gw) / 6.5, started: false, leaveT: 0, pose: null,
+      };
+      sfx.heartbeat();
+    }
   }
 
-  // 테스트용: 희귀 친구 전부를 화면 안에 바로 띄우기 (콘솔에서 SeaGame.showRare())
-  function showRare() {
-    if (!running) return;
-    for (const sp of RARE) spawn(sp, false);
+  function endGiant() {
+    giant = null;
+    for (const c of creatures) c.scared = false;
+  }
+
+  function updateGiant(dt) {
+    const g = giant;
+    g.t += dt;
+    g.hitT = Math.max(0, g.hitT - dt);
+    g.roarCD = Math.max(0, g.roarCD - dt);
+    g.roarBubble = Math.max(0, g.roarBubble - dt);
+    g.bannerT = Math.max(0, g.bannerT - dt);
+    if (g.kind === "kraken") {
+      const T = g.t;
+      g.rise = T < 2 ? 0 : T < 4 ? (T - 2) / 2 : T < 10 ? 1 : T < 12 ? 1 - (T - 10) / 2 : 0;
+      if (T >= 2 && !g.roared) { g.roared = true; sfx.roar(); }
+      g.darkTarget = T < 12 ? .55 : 0;
+      g.shake = (T < 2 ? .5 : T < 4 ? 1.5 : 0) + g.hitT * 3;
+      if (T > 13) endGiant();
+    } else {
+      if (g.t < 1.8) { g.shake = .3; return; } // 경고 중
+      if (!g.started) { g.started = true; sfx.roar(); }
+      g.x += g.dir * g.speed * (g.hitT > 0 ? .3 : 1) * dt;
+      g.y = g.baseY + Math.sin(g.t * .9) * 3;
+      g.shake = (g.t < 2.8 ? 1 : 0) + g.hitT * 3;
+      const out = g.dir > 0 ? g.x > W + 4 : g.x < -g.gw - 4;
+      if (out) {
+        g.darkTarget = 0;
+        g.leaveT += dt;
+        if (g.leaveT > 1.5) endGiant();
+      }
+    }
+  }
+
+  // 픽셀로 채운 타원 (크라켄은 매 프레임 직접 그림)
+  function pxEllipse(cx, cy, rx, ry, col) {
+    lctx.fillStyle = col;
+    const R = Math.ceil(ry);
+    for (let dy = -R; dy <= R; dy++) {
+      const v = 1 - (dy / ry) ** 2;
+      if (v < 0) continue;
+      const w = rx * Math.sqrt(v);
+      lctx.fillRect(Math.round(cx - w), Math.round(cy) + dy, Math.round(w * 2) + 1, 1);
+    }
+  }
+
+  function krakenShape(g) {
+    const rx = Math.min(W * .17, 52), ry = rx * 1.1;
+    const r = ease(clamp(g.rise, 0, 1));
+    const startY = H + ry + 6, endY = H * .6;
+    const cy = startY + (endY - startY) * r, cx = g.cx;
+    const n = 8, segs = 26, len = H * .95 * r;
+    const amp = .5 + g.hitT * 1.6; // 맞으면 촉수를 마구 휘두름
+    const tents = [];
+    for (let i = 0; i < n; i++) {
+      const u = (i - (n - 1) / 2) / ((n - 1) / 2); // -1..1
+      const a0 = -Math.PI / 2 + u * 1.1;
+      let x = cx + u * rx * .75, y = cy + ry * .25;
+      const pts = [];
+      for (let k = 0; k <= segs; k++) {
+        const t = k / segs;
+        pts.push([x, y, Math.max(1, rx * .2 * (1 - t * .85))]);
+        const ang = a0 + Math.sin(time * 1.6 + i * 1.7 + t * 5) * amp * t + u * t * t * 1.3;
+        x += (Math.cos(ang) * len) / segs;
+        y += (Math.sin(ang) * len) / segs;
+      }
+      tents.push(pts);
+    }
+    return { cx, cy, rx, ry, tents };
+  }
+
+  function drawKraken(g) {
+    const s = krakenShape(g);
+    g.shape = s;
+    if (s.cy - s.ry > H && g.rise <= 0) return;
+    const OUT = "#1b0a14", BODY = "#7a2040", LIGHT = "#a8385a", SUCK = "#f2b5c4";
+    for (const pts of s.tents) for (const [x, y, r] of pts) pxEllipse(x, y, r + 1, r + 1, OUT);
+    for (const pts of s.tents) for (const [x, y, r] of pts) pxEllipse(x, y, r, r, BODY);
+    for (const pts of s.tents) {
+      for (let k = 4; k < pts.length; k += 3) {
+        const [x, y, r] = pts[k];
+        if (r >= 2) pxEllipse(x + r * .4, y, r * .35, r * .35, SUCK); // 빨판
+      }
+    }
+    pxEllipse(s.cx, s.cy, s.rx + 1, s.ry + 1, OUT);
+    pxEllipse(s.cx, s.cy, s.rx, s.ry, BODY);
+    pxEllipse(s.cx - s.rx * .35, s.cy - s.ry * .5, s.rx * .25, s.ry * .15, LIGHT);
+
+    // 노려보는 눈 (손가락을 따라봄)
+    const er = Math.max(3, Math.round(s.rx * .2));
+    const look = lastTouch && time - lastTouch.t < 3 ? lastTouch : { x: s.cx + Math.sin(time * .7) * W * .3, y: H * .4 };
+    for (const side of [-1, 1]) {
+      const ex = Math.round(s.cx + side * s.rx * .42), ey = Math.round(s.cy - s.ry * .2);
+      pxEllipse(ex, ey, er + 1, er + 1, OUT);
+      if (g.hitT > 0 || Math.sin(time * 1.3) > .97) { // 찡그림 / 깜빡임: 눈꺼풀 닫힘
+        pxEllipse(ex, ey, er, er, BODY);
+        lctx.fillStyle = OUT;
+        lctx.fillRect(ex - er, ey, er * 2 + 1, 2);
+      } else {
+        pxEllipse(ex, ey, er, er, "#ffd23f");
+        const dx = clamp((look.x - ex) / 40, -1, 1) * er * .35;
+        const dy = clamp((look.y - ey) / 40, -1, 1) * er * .35;
+        lctx.fillStyle = "#14182b";
+        lctx.fillRect(Math.round(ex + dx - er * .7), Math.round(ey + dy) - 1, Math.round(er * 1.4) + 1, 2);
+      }
+      lctx.fillStyle = OUT; // 화난 눈썹 (바깥쪽이 높고 안쪽이 낮게)
+      for (let k = 0; k <= er * 1.6; k++) {
+        lctx.fillRect(Math.round(ex + side * (er + 1) - side * k), Math.round(ey - er - 3 + k * .45), 2, 2);
+      }
+    }
+  }
+
+  function drawSwimmer(g) {
+    g.pose = null;
+    if (g.t < 1.8) return;
+    const spr = g.sp.frames[Math.floor(time * (g.hitT > 0 ? 8 : 2)) % 2]; // 턱 딱딱
+    const dx = Math.round(g.x), dy = Math.round(g.y), gs = g.gs;
+    const flip = g.dir < 0;
+    lctx.save();
+    if (flip) { lctx.translate(dx + spr.w * gs, dy); lctx.scale(-gs, gs); }
+    else { lctx.translate(dx, dy); lctx.scale(gs, gs); }
+    lctx.drawImage(spr.canvas, 0, 0);
+    for (const [ex, ey] of g.sp.eyes) drawEye(g.hitT > 0 ? EYES.squint : EYES.giant, ex + 1, ey + 1, false);
+    lctx.restore();
+    g.pose = { spr, dx, dy, flip, gs };
+  }
+
+  function hitGiant(ax, ay) {
+    const g = giant;
+    if (!g) return false;
+    if (g.kind === "kraken") {
+      const s = g.shape;
+      if (!s || g.rise <= .2) return false;
+      if (((ax - s.cx) / s.rx) ** 2 + ((ay - s.cy) / s.ry) ** 2 <= 1) return true;
+      for (const pts of s.tents) {
+        for (let k = 0; k < pts.length; k += 2) {
+          const [x, y, r] = pts[k];
+          if (Math.hypot(ax - x, ay - y) < r + 3) return true;
+        }
+      }
+      return false;
+    }
+    if (!g.pose) return false;
+    const { spr, dx, dy, flip, gs } = g.pose;
+    let lx = Math.floor((ax - dx) / gs);
+    const ly = Math.floor((ay - dy) / gs);
+    if (flip) lx = spr.w - 1 - lx;
+    const R = 2;
+    for (let oy = -R; oy <= R; oy++) {
+      for (let ox = -R; ox <= R; ox++) {
+        const x = lx + ox, y = ly + oy;
+        if (x >= 0 && y >= 0 && x < spr.w && y < spr.h && spr.mask[y * spr.w + x]) return true;
+      }
+    }
+    return false;
+  }
+
+  function pokeGiant() {
+    const g = giant;
+    g.hitT = .7;
+    g.roarBubble = 1.2;
+    if (g.roarCD <= 0) { sfx.roar(); g.roarCD = .9; }
+    if (!g.named) { g.named = true; say(g.name); }
   }
 
   // ---------- 현재 모습(프레임/위치) ----------
@@ -750,6 +930,7 @@
     if (hintEl) hintEl.classList.add("hide");
     try { canvas.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     const [ax, ay] = toArt(e);
+    lastTouch = { x: ax, y: ay, t: time };
     pointers.set(e.pointerId, { x: ax, y: ay, t: time, moved: 0, c: creatureAt(ax, ay), petted: false });
   }
 
@@ -769,6 +950,7 @@
     const p = pointers.get(e.pointerId);
     pointers.delete(e.pointerId);
     if (!p || e.type === "pointercancel" || p.petted || p.moved * P >= MOVE_CSS) return;
+    if (giant && hitGiant(p.x, p.y)) return pokeGiant(); // 거대 생물이 맨 앞
     const c = creatureAt(p.x, p.y);
     if (c) poke(c, p.x);
     else dropFood(p.x, p.y);
@@ -863,6 +1045,14 @@
     c.eatCD = Math.max(0, c.eatCD - dt);
     const [top, bottom] = bounds(sp);
 
+    // 거대 생물이 나타나면 화면 밖으로 쌩~ 숨었다가, 사라지면 다시 들어옴
+    if (c.state === "swim" && c.scared) {
+      c.x = clamp(c.x + c.dir * c.speed * 3.5 * dt, -b.w * 1.6, W + b.w * .6);
+      if (sp.kind === "crab") c.y = crabY(c);
+      else c.y = c.baseY + Math.sin(time * sp.bobF * 3 + c.phase) * sp.bobA;
+      return;
+    }
+
     if (c.state === "swim") {
       if (c.taps && time - c.lastTap > 4) c.taps = 0; // 한참 지나면 다시 진정
       c.boost += (1 - c.boost) * Math.min(1, dt * 1.2);
@@ -894,19 +1084,10 @@
           c.baseY += (c.targetY - c.baseY) * Math.min(1, dt * .5);
           c.y = c.baseY + Math.sin(time * sp.bobF + c.phase) * sp.bobA;
         }
-        if (!c.rare && c.petT <= 0) {
+        if (c.petT <= 0) {
           if (c.dir > 0 && c.x > W - b.w * .6) c.dir = -1;
           else if (c.dir < 0 && c.x < -b.w * .4) c.dir = 1;
           else if (Math.random() < dt * .03) c.dir *= -1;
-        }
-      }
-
-      // 희귀 친구는 화면을 한 번 지나가고 사라짐 + 반짝이
-      if (c.rare) {
-        if (!c.entered && c.x + b.w > 4 && c.x < W - 4) c.entered = true;
-        if (c.entered && (c.x > W + 4 || c.x < -b.w - 4)) c.state = "gone";
-        if ((sp.sparkle || time - c.born < 6) && Math.random() < dt * 12) {
-          particles.push({ t: "spark", x: c.x + rand(0, b.w), y: c.y + rand(0, b.h), vx: 0, vy: -3, life: .6, max: .6 });
         }
       }
     } else if (c.state === "cry") {
@@ -943,15 +1124,14 @@
     const gone = creatures.filter((c) => c.state === "gone");
     if (gone.length) {
       creatures = creatures.filter((c) => c.state !== "gone");
-      for (const c of gone) if (!c.rare) respawns.push(rand(2, 4.5));
+      for (let i = 0; i < gone.length; i++) respawns.push(rand(2, 4.5));
     }
 
-    // 가끔 희귀 친구 등장
-    rareT -= dt;
-    if (rareT <= 0) {
-      rareT = rand(35, 60);
-      if (!creatures.some((c) => c.rare)) spawnRare();
-    }
+    // 가끔 거대 생물 등장
+    if (giant) updateGiant(dt);
+    else if ((giantT -= dt) <= 0) { giantT = rand(40, 70); startGiant(); }
+    dark += ((giant ? giant.darkTarget : 0) - dark) * Math.min(1, dt * 2);
+    shake = giant ? giant.shake : 0;
 
     // 먹이는 천천히 가라앉아 바닥에 멈춤
     for (const fd of foods) {
@@ -965,7 +1145,7 @@
     foods = foods.filter((fd) => !fd.eaten && fd.life > 0);
 
     for (let i = respawns.length - 1; i >= 0; i--) {
-      if ((respawns[i] -= dt) <= 0) {
+      if (!giant && (respawns[i] -= dt) <= 0) { // 거대 생물이 있는 동안엔 새 친구 안 나옴
         respawns.splice(i, 1);
         if (creatures.length < target) spawn(pickSpecies(), true);
       }
@@ -1018,7 +1198,7 @@
     lctx.drawImage(spr.canvas, 0, 0);
     lctx.globalAlpha = 1;
 
-    const mood = c.state !== "swim" ? "cry" : c.flinch > 0 ? "squint" : c.happy > 0 ? "happy" : c.blinkT > 0 ? "blink" : "open";
+    const mood = c.state !== "swim" ? "cry" : (c.flinch > 0 || c.scared) ? "squint" : c.happy > 0 ? "happy" : c.blinkT > 0 ? "blink" : "open";
     for (const [ex, ey, mir] of eyes) drawEye(EYES[mood], ex + 1, ey + 1, !!mir);
     lctx.restore();
 
@@ -1148,12 +1328,20 @@
 
     drawWeeds();
     for (const c of creatures) drawCreature(c);
+    if (dark > .01) { // 거대 생물 등장: 바다가 어두워짐
+      lctx.fillStyle = `rgba(4,8,28,${dark})`;
+      lctx.fillRect(0, 0, W, H);
+    }
+    if (giant) (giant.kind === "kraken" ? drawKraken : drawSwimmer)(giant);
     drawFoods();
     drawParticles();
 
-    // 픽셀 그대로 확대
+    // 픽셀 그대로 확대 (+ 화면 흔들림)
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(low, 0, 0, W * P * dpr, H * P * dpr);
+    const sx = shake > 0 ? Math.round(rand(-1, 1) * shake * P * dpr) : 0;
+    const sy = shake > 0 ? Math.round(rand(-1, 1) * shake * P * dpr) : 0;
+    if (sx || sy) { ctx.fillStyle = "#04081c"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.drawImage(low, sx, sy, W * P * dpr, H * P * dpr);
 
     const S = P * dpr;
     for (const c of creatures) {
@@ -1166,6 +1354,16 @@
       if (c.bubble && c.pose) {
         const { spr, dx, dy } = c.pose;
         label(c.bubble.text, (dx + spr.w / 2) * S, dy * S, "bubble", Math.min(1, c.bubble.t * 3));
+      }
+    }
+    if (giant) {
+      const g = giant;
+      if (g.bannerT > 0) label(`⚠️ ${g.banner}`, canvas.width / 2, 64 * dpr, "tag", Math.min(1, g.bannerT));
+      if (g.roarBubble > 0) {
+        let bx = null, by = null;
+        if (g.kind === "kraken" && g.shape) { bx = g.shape.cx * S; by = (g.shape.cy - g.shape.ry) * S; }
+        else if (g.pose) { bx = (g.pose.dx + g.gw * (g.pose.flip ? .2 : .8)) * S; by = g.pose.dy * S; }
+        if (bx !== null) label("크아아앙!", bx, by, "bubble", Math.min(1, g.roarBubble * 3));
       }
     }
   }
@@ -1194,13 +1392,16 @@
 
   // ---------- 공개 API ----------
   window.SeaGame = {
-    showRare: () => showRare(),
+    // 테스트용: 콘솔에서 SeaGame.giant("kraken" | "mosa" | "mega")
+    giant: (kind) => { if (running) startGiant(kind); },
+    // 테스트용: 시뮬레이션을 sec초만큼 빨리 돌리기
+    advance: (sec) => { if (!running) return; for (let t = 0; t < sec; t += 1 / 30) update(1 / 30); render(); },
     start(cv, hint) {
       if (running) return;
       canvas = cv; ctx = cv.getContext("2d"); hintEl = hint;
       if (!SPECIES) {
         const built = buildSpecies();
-        SPECIES = built.list; RARE = built.rare; DECOR = buildDecor();
+        SPECIES = built.list; GIANTS = built.giants; DECOR = buildDecor();
       }
       layout();
       populate();
