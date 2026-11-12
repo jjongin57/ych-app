@@ -71,8 +71,46 @@ function blip(freq = 660) {
     osc.stop(audioCtx.currentTime + 0.25);
   } catch { /* 소리 없이 진행 */ }
 }
+// ---------- 전체화면 (주소창/메뉴 숨기기) ----------
+// 안드로이드 등에서 동작. 아이폰 Safari는 지원하지 않아서 버튼이 숨겨짐(홈 화면에 추가하면 전체화면)
+const rootEl = document.documentElement;
+const canFullscreen = !!(rootEl.requestFullscreen || rootEl.webkitRequestFullscreen);
+const isAppMode = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches ||
+  navigator.standalone === true;
+const isTouch = matchMedia("(pointer: coarse)").matches;
+
+const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function enterFullscreen() {
+  if (!canFullscreen || isAppMode || isFullscreen()) return;
+  try {
+    const req = rootEl.requestFullscreen || rootEl.webkitRequestFullscreen;
+    const r = req.call(rootEl, { navigationUI: "hide" });
+    if (r && r.catch) r.catch(() => {});
+  } catch { /* 지원 안 함 */ }
+}
+function exitFullscreen() {
+  try {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    const r = exit.call(document);
+    if (r && r.catch) r.catch(() => {});
+  } catch { /* ignore */ }
+}
+function updateFsBtn() {
+  $("fsBtn").hidden = !canFullscreen || isAppMode;
+  $("fsBtn").textContent = isFullscreen() ? "↩️ 작게 보기" : "📺 크게 보기";
+}
+$("fsBtn").addEventListener("click", () => (isFullscreen() ? exitFullscreen() : enterFullscreen()));
+document.addEventListener("fullscreenchange", updateFsBtn);
+document.addEventListener("webkitfullscreenchange", updateFsBtn);
+updateFsBtn();
+
 document.querySelectorAll(".card").forEach((card) => {
-  card.addEventListener("click", () => { blip(); addStar(); });
+  card.addEventListener("click", () => {
+    blip();
+    addStar();
+    // 휴대폰/태블릿에서 바다 체험에 들어가면 자동으로 전체화면
+    if (card.getAttribute("href") === "#sea" && isTouch) enterFullscreen();
+  });
 });
 
 // ---------- 화면 전환 (해시 라우팅) ----------

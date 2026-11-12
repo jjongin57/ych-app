@@ -177,6 +177,8 @@ body {
   pointer-events: none;
 }
 .sea-top > * { pointer-events: auto; }
+.fs-btn { margin-left: auto; font-size: 18px; padding: 10px 18px; }
+.fs-btn[hidden] { display: none; }
 .sea-title {
   font-size: 24px;
   color: #fff;
