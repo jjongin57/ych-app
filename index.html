@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF6E5" />
+  <title>우리 아이 놀이터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 배경 장식 -->
+  <div class="sky" aria-hidden="true">
+    <span class="cloud c1">☁️</span>
+    <span class="cloud c2">☁️</span>
+    <span class="cloud c3">☁️</span>
+  </div>
+
+  <!-- 홈 화면 -->
+  <main id="home" class="screen">
+    <header class="hero">
+      <div class="sun" aria-hidden="true">🌞</div>
+      <p class="greeting" id="greeting">안녕!</p>
+      <h1 class="title">
+        <button type="button" id="nameBtn" class="name-btn" aria-label="이름 바꾸기">
+          <span id="childName">친구</span>
+        </button>야, 오늘은 뭐 하고 놀까?
+      </h1>
+    </header>
+
+    <nav class="menu" aria-label="놀이 메뉴">
+      <a class="card" href="#draw"   style="--c:#FF8A80; --d:0s">
+        <span class="icon">🎨</span><span class="label">그림 그리기</span>
+      </a>
+      <a class="card" href="#hangul" style="--c:#FFD54F; --d:.05s">
+        <span class="icon">🔤</span><span class="label">한글 놀이</span>
+      </a>
+      <a class="card" href="#number" style="--c:#81D4FA; --d:.1s">
+        <span class="icon">🔢</span><span class="label">숫자 놀이</span>
+      </a>
+      <a class="card" href="#sea" style="--c:#80DEEA; --d:.15s">
+        <span class="icon">🐳</span><span class="label">바다 체험</span>
+      </a>
+      <a class="card" href="#story"  style="--c:#CE93D8; --d:.2s">
+        <span class="icon">📚</span><span class="label">동화 듣기</span>
+      </a>
+      <a class="card" href="#music"  style="--c:#FFAB91; --d:.25s">
+        <span class="icon">🎵</span><span class="label">노래 부르기</span>
+      </a>
+    </nav>
+
+    <section class="stickers" aria-label="오늘 모은 스티커">
+      <span class="stickers-title">오늘 모은 별</span>
+      <span id="stars" class="stars">⭐</span>
+    </section>
+  </main>
+
+  <!-- 하위 화면(준비 중) -->
+  <section id="sub" class="screen" hidden>
+    <button type="button" class="back" id="backBtn">⬅️ 집으로</button>
+    <div class="sub-body">
+      <div class="sub-icon" id="subIcon">🎨</div>
+      <h2 class="sub-title" id="subTitle">그림 그리기</h2>
+      <p class="sub-text">곧 만나요! 준비하고 있어요 🛠️</p>
+    </div>
+  </section>
+
+  <!-- 바다 체험 -->
+  <section id="seaScreen" class="sea-screen" hidden>
+    <canvas id="seaCanvas" aria-label="바다 체험: 바다 친구를 눌러 보세요"></canvas>
+    <div class="sea-top">
+      <button type="button" class="back" id="seaBackBtn">⬅️ 집으로</button>
+      <span class="sea-title">🐳 바다 체험</span>
+    </div>
+    <p class="sea-hint" id="seaHint">바다 친구를 톡톡 눌러 보세요!</p>
+  </section>
+
+  <script src="sea.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

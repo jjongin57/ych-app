@@ -1,0 +1,205 @@
+:root {
+  --bg-top: #FFF6E5;
+  --bg-bottom: #E3F4FF;
+  --ink: #4A3B2C;
+  --ink-soft: #8A7560;
+  --card-ink: #3D2E20;
+  --shadow: rgba(74, 59, 44, 0.18);
+  --white: #FFFFFF;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ---------- 배경 구름 ---------- */
+.sky { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.cloud {
+  position: absolute;
+  font-size: 64px;
+  opacity: .7;
+  animation: drift linear infinite;
+}
+.c1 { top: 8%;  animation-duration: 38s; }
+.c2 { top: 26%; animation-duration: 52s; animation-delay: -20s; font-size: 48px; }
+.c3 { top: 62%; animation-duration: 45s; animation-delay: -35s; font-size: 56px; }
+@keyframes drift {
+  from { transform: translateX(-120px); }
+  to   { transform: translateX(110vw); }
+}
+
+/* ---------- 공통 화면 ---------- */
+.screen {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 16px 40px;
+  min-height: 100%;
+}
+
+/* ---------- 상단 인사 ---------- */
+.hero { text-align: center; margin: 12px 0 28px; }
+.sun {
+  font-size: 72px;
+  display: inline-block;
+  animation: spin 14s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.greeting { margin: 4px 0 0; font-size: 22px; color: var(--ink-soft); }
+.title { margin: 6px 0 0; font-size: clamp(26px, 6vw, 40px); font-weight: normal; line-height: 1.35; }
+
+.name-btn {
+  font: inherit;
+  color: #E85D75;
+  background: var(--white);
+  border: 3px dashed #F7B2BF;
+  border-radius: 999px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+/* ---------- 메뉴 카드 ---------- */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .menu { grid-template-columns: repeat(3, 1fr); gap: 22px; }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  aspect-ratio: 1 / 1;
+  min-height: 140px;
+  border-radius: 32px;
+  background: var(--c);
+  color: var(--card-ink);
+  text-decoration: none;
+  box-shadow: 0 8px 0 rgba(0,0,0,.12), 0 14px 24px var(--shadow);
+  transition: transform .12s ease, box-shadow .12s ease;
+  animation: pop .5s cubic-bezier(.34,1.56,.64,1) both;
+  animation-delay: var(--d);
+}
+.card:hover { transform: translateY(-4px) rotate(-1.5deg); }
+.card:active {
+  transform: translateY(6px) scale(.97);
+  box-shadow: 0 2px 0 rgba(0,0,0,.12), 0 4px 10px var(--shadow);
+}
+.card:focus-visible { outline: 5px solid #4A90E2; outline-offset: 4px; }
+
+.icon  { font-size: clamp(56px, 14vw, 80px); line-height: 1; }
+.label { font-size: clamp(20px, 4.6vw, 26px); }
+
+@keyframes pop {
+  from { transform: scale(.3); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+
+/* ---------- 별 스티커 ---------- */
+.stickers {
+  margin-top: 28px;
+  padding: 16px 20px;
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: 0 6px 16px var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.stickers-title { font-size: 20px; color: var(--ink-soft); }
+.stars { font-size: 28px; letter-spacing: 4px; }
+
+/* ---------- 하위 화면 ---------- */
+.back {
+  font: inherit;
+  font-size: 22px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 5px 0 rgba(0,0,0,.1);
+  cursor: pointer;
+}
+.back:active { transform: translateY(4px); box-shadow: none; }
+
+.sub-body { text-align: center; margin-top: 12vh; }
+.sub-icon { font-size: 120px; animation: bounce 1.4s ease-in-out infinite; }
+.sub-title { font-size: 40px; font-weight: normal; margin: 12px 0 8px; }
+.sub-text { font-size: 22px; color: var(--ink-soft); }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-18px); }
+}
+
+/* ---------- 바다 체험 ---------- */
+.sea-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: #1f74b5;
+  overflow: hidden;
+}
+.sea-screen canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: pointer;
+}
+.sea-top {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+.sea-top > * { pointer-events: auto; }
+.sea-title {
+  font-size: 24px;
+  color: #fff;
+  text-shadow: 0 2px 0 #1b2440, 2px 0 0 #1b2440, -2px 0 0 #1b2440, 0 -2px 0 #1b2440;
+}
+.sea-hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  color: var(--ink);
+  font-size: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity .6s;
+}
+.sea-hint.hide { opacity: 0; }
+
+/* 움직임 줄이기 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
