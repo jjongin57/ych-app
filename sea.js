@@ -467,6 +467,10 @@
     },
     heartbeat: () => [0, 260, 900, 1160].forEach((ms) => // 쿵쿵… 쿵쿵
       setTimeout(() => tone({ type: "triangle", f0: 150, f1: 60, dur: .16, vol: .3 }), ms)),
+    burp: () => { // 꺼억~
+      tone({ type: "sawtooth", f0: 150, f1: 85, dur: .55, vol: .16, vib: 22 });
+      tone({ type: "square", f0: 110, f1: 70, dur: .45, vol: .05, vib: 16 });
+    },
     roar: () => { // 크아아앙
       tone({ type: "sawtooth", f0: 260, f1: 70, dur: 1.3, vol: .18, vib: 14 });
       tone({ type: "square", f0: 180, f1: 55, dur: 1.1, vol: .07, vib: 9 });
@@ -494,6 +498,68 @@
   let creatures = [], particles = [], respawns = [];
   let time = 0, last = 0, raf = 0, running = false, bubbleT = 0;
   let lastCssW = 0, lastCssH = 0;
+
+  // ---------- 미션: 배고픈 친구에게 밥 주기 ----------
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const FEED_NEED = 5; // 한 번 톡 = 먹이 3알 → 두어 번 줘야 배부름
+  const ICON = { shark: "🦈", fish: "🐠", octo: "🐙", turtle: "🐢", crab: "🦀" };
+  let hungry = null, missionT = 6, bar = null, screenEl = null, missions = 0;
+  const askFeed = () => {
+    if (!hungry) return;
+    say(`배고픈 ${hungry.c.sp.name}에게 밥을 주자!` + (missions < 2 ? " 빈 곳을 톡 누르면 밥이 나와요." : ""));
+    hungry.nagT = 14;
+  };
+  function startHungry() {
+    const ok = creatures.filter((c) => c.state === "swim" && !c.scared && c.sp.kind !== "jelly" &&
+      c.x > 0 && c.x < W - c.sp.frames[0].w);
+    if (!ok.length) { missionT = 2; return; }
+    const sharks = ok.filter((c) => c.sp.kind === "shark");
+    const c = sharks.length && Math.random() < .6 ? pick(sharks) : pick(ok);
+    hungry = { c, got: 0, nagT: 14, beg: 1.5 };
+    const icon = c.sp.id === "puffer" ? "🐡" : ICON[c.sp.kind] || "🐟";
+    bar.show(icon, `${c.sp.name} 밥 주기`, FEED_NEED);
+    askFeed();
+  }
+  function fedHungry(c, mx, my) {
+    hungry.got++;
+    c.fat = hungry.got;
+    bar.progress(hungry.got);
+    if (hungry.got < FEED_NEED) {
+      c.bubble = { text: "냠냠! 더 줘~", t: 1.3 };
+      return;
+    }
+    // 배불러서 꺼억~
+    hungry = null;
+    missions++;
+    missionT = rand(10, 16);
+    bar.hide();
+    c.fullT = 7;
+    c.eatCD = 7;
+    setTimeout(() => {
+      if (!running) return;
+      c.bubble = { text: "꺼억~ 배불러! 💕", t: 2.4 };
+      sfx.burp();
+      for (let i = 0; i < 8; i++) heart(mx + rand(-6, 6), my - rand(0, 6));
+      setTimeout(() => running && Kids.celebrate(screenEl, "배부르대요! 잘했어요!"), 900);
+    }, 500);
+  }
+  function updateHungry(dt) {
+    if (!hungry) {
+      if (!giant && (missionT -= dt) <= 0) startHungry();
+      return;
+    }
+    const c = hungry.c;
+    if (!creatures.includes(c) || c.state !== "swim") { // 도망가 버렸으면 다른 친구가 배고파함
+      hungry = null; missionT = 1.5;
+      return;
+    }
+    if (giant || c.scared) return;
+    if ((hungry.beg -= dt) <= 0) {
+      hungry.beg = 5;
+      if (!c.bubble) c.bubble = { text: "배고파~ 😋", t: 1.6 };
+    }
+    if ((hungry.nagT -= dt) <= 0) askFeed();
+  }
 
   // ---------- 화면 크기 맞추기 ----------
   function layout() {
@@ -1003,7 +1069,9 @@
   function nearestFood(c) {
     const b = c.sp.frames[0];
     const cx = c.x + b.w / 2, cy = c.y + b.h / 2;
-    let best = null, bd = 90 * 90;
+    // 미션 중이면 배고픈 친구는 멀리서도 먹이를 찾고, 다른 친구들은 가까운 것만
+    const reach = !hungry ? 90 : hungry.c === c ? 260 : 40;
+    let best = null, bd = reach * reach;
     for (const fd of foods) {
       if (fd.eaten) continue;
       if (c.sp.kind === "crab" && fd.y < floorAt(fd.x) - 1) continue; // 꽃게는 바닥에 떨어진 것만
@@ -1021,6 +1089,7 @@
     c.bubble = { text: "냠냠!", t: 1 };
     heart(mx, my - 3);
     sfx.munch();
+    if (hungry && hungry.c === c) { c.eatCD = .6; fedHungry(c, mx, my); }
   }
 
   // ---------- 움직임 ----------
@@ -1045,6 +1114,10 @@
     c.happy = Math.max(0, c.happy - dt);
     c.petT = Math.max(0, c.petT - dt);
     c.eatCD = Math.max(0, c.eatCD - dt);
+    if (c.fat && !(hungry && hungry.c === c)) { // 배부른 뒤 천천히 홀쭉해짐
+      c.fullT = (c.fullT || 0) - dt;
+      if (c.fullT <= 0) c.fat = Math.max(0, c.fat - dt * .8);
+    }
     const [top, bottom] = bounds(sp);
 
     // 거대 생물이 나타나면 화면 밖으로 쌩~ 숨었다가, 사라지면 다시 들어옴
@@ -1065,7 +1138,7 @@
         const cx = c.x + b.w / 2;
         if (Math.abs(food.x - cx) > 2) c.dir = food.x > cx ? 1 : -1;
         const [mx, my] = mouth(c);
-        const step = c.speed * 1.8 * dt;
+        const step = c.speed * (hungry && hungry.c === c ? 3 : 1.8) * dt;
         c.x += clamp(food.x - mx, -step, step);
         if (sp.kind === "crab") c.y = crabY(c);
         else {
@@ -1128,6 +1201,8 @@
       creatures = creatures.filter((c) => c.state !== "gone");
       for (let i = 0; i < gone.length; i++) respawns.push(rand(2, 4.5));
     }
+
+    updateHungry(dt);
 
     // 가끔 거대 생물 등장
     if (giant) updateGiant(dt);
@@ -1196,6 +1271,12 @@
     lctx.save();
     if (flip) { lctx.translate(dx + spr.w, dy); lctx.scale(-1, 1); }
     else lctx.translate(dx, dy);
+    if (c.fat > 0) { // 밥 먹을수록 배가 빵빵
+      const k = c.fat * .07;
+      lctx.translate(spr.w / 2, spr.h / 2);
+      lctx.scale(1 + k * .4, 1 + k);
+      lctx.translate(-spr.w / 2, -spr.h / 2);
+    }
     lctx.globalAlpha = c.sp.alpha || 1;
     lctx.drawImage(spr.canvas, 0, 0);
     lctx.globalAlpha = 1;
@@ -1337,6 +1418,15 @@
     if (giant) (giant.kind === "kraken" ? drawKraken : drawSwimmer)(giant);
     drawFoods();
     drawParticles();
+    if (hungry && hungry.c.pose && !hungry.c.scared) { // 배고픈 친구 머리 위 콩콩 화살표
+      const { spr, dx, dy } = hungry.c.pose;
+      const ax = Math.round(dx + spr.w / 2), ay = Math.round(dy - 7 + Math.abs(Math.sin(time * 5)) * -3);
+      lctx.fillStyle = OUTLINE;
+      lctx.fillRect(ax - 4, ay - 1, 9, 4); lctx.fillRect(ax - 3, ay + 3, 7, 1);
+      lctx.fillRect(ax - 2, ay + 4, 5, 1); lctx.fillRect(ax - 1, ay + 5, 3, 1); lctx.fillRect(ax, ay + 6, 1, 1);
+      lctx.fillStyle = "#ffd23f";
+      lctx.fillRect(ax - 3, ay, 7, 3); lctx.fillRect(ax - 2, ay + 3, 5, 1); lctx.fillRect(ax - 1, ay + 4, 3, 1); lctx.fillRect(ax, ay + 5, 1, 1);
+    }
 
     // 픽셀 그대로 확대 (+ 화면 흔들림)
     ctx.imageSmoothingEnabled = false;
@@ -1398,6 +1488,9 @@
     giant: (kind) => { if (running) startGiant(kind); },
     // 테스트용: 시뮬레이션을 sec초만큼 빨리 돌리기
     advance: (sec) => { if (!running) return; for (let t = 0; t < sec; t += 1 / 30) update(1 / 30); render(); },
+    // 테스트용: 배고픈 친구 입 앞에 먹이 떨어뜨리기 / 미션 상태 보기
+    feedHungry: () => { if (hungry) { const [mx, my] = mouth(hungry.c); dropFood(mx, my); } },
+    mission: () => hungry && { name: hungry.c.sp.name, got: hungry.got },
     start(cv, hint) {
       if (running) return;
       canvas = cv; ctx = cv.getContext("2d"); hintEl = hint;
@@ -1405,6 +1498,9 @@
         const built = buildSpecies();
         SPECIES = built.list; GIANTS = built.giants; DECOR = buildDecor();
       }
+      screenEl = cv.parentElement;
+      bar = Kids.missionBar(screenEl, askFeed);
+      hungry = null; missionT = 6;
       layout();
       populate();
       pointers.clear();
@@ -1428,6 +1524,7 @@
       canvas.removeEventListener("pointercancel", onUp);
       pointers.clear();
       window.removeEventListener("resize", onResize);
+      hungry = null; bar.hide();
       try { speechSynthesis.cancel(); } catch { /* ignore */ }
     },
   };

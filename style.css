@@ -382,3 +382,67 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- 미션 표시줄 + 축하 ---------- */
+.mission {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 16px 6px 10px;
+  border: 3px solid #ffd23f;
+  border-radius: 999px;
+  background: #fffbe8;
+  color: var(--ink);
+  font-size: 20px;
+  box-shadow: 0 4px 0 rgba(0,0,0,.15);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mission[hidden] { display: none; }
+.mission .m-icon { font-size: 30px; line-height: 1; }
+.mission .m-text { overflow: hidden; text-overflow: ellipsis; }
+.mission .m-dots { color: #ff9f43; letter-spacing: 2px; font-size: 16px; }
+.mission.pop { animation: missionPop .5s; }
+@keyframes missionPop { 0% { transform: scale(.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+.celebrate { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.celebrate i {
+  position: absolute; top: -20px; width: 12px; height: 16px; border-radius: 3px;
+  animation: confetti 2s ease-in forwards;
+}
+@keyframes confetti {
+  to { transform: translate(var(--dx), 110vh) rotate(var(--r)); }
+}
+.celebrate .cheer {
+  position: absolute; left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  padding: 14px 28px; border-radius: 999px;
+  background: rgba(255,255,255,.95); color: #e8456f;
+  font-size: 36px; white-space: nowrap;
+  box-shadow: 0 6px 0 rgba(0,0,0,.15);
+  animation: cheer 2.6s forwards;
+}
+@keyframes cheer {
+  0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; }
+  15% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  25%, 80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.game-title[hidden] { display: none; }
+@media (max-height: 500px) and (orientation: landscape) {
+  .mission { font-size: 16px; padding: 4px 12px 4px 8px; }
+  .mission .m-icon { font-size: 24px; }
+  .celebrate .cheer { font-size: 28px; }
+}
+@media (max-width: 420px) {
+  .mission { font-size: 17px; padding: 5px 12px 5px 8px; }
+  .mission .m-icon { font-size: 24px; }
+}
+.game-top .back { white-space: nowrap; flex-shrink: 0; }
+/* 세로 화면: 한 줄에 다 안 들어가면 미션 표시줄은 둘째 줄로 */
+@media (orientation: portrait) {
+  .game-top { flex-wrap: wrap; row-gap: 8px; }
+  .mission { order: 5; }
+}
